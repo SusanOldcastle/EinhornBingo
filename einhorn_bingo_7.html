@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Einhorn-Bingo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-top:#efe6fb;
+    --bg-bottom:#f7eefc;
+    --card:#fffdf8;
+    --ink:#2d1b4e;
+    --violet:#6b46c1;
+    --violet-deep:#4c2a99;
+    --pink:#e85d9e;
+    --gold:#f2b632;
+    --line:#e4d7f7;
+    --checked:#6b46c1;
+    --checked-text:#fffdf8;
+    --q-now:#e0483a;
+    --q-plan:#6b46c1;
+    --q-quick:#e2a615;
+    --q-later:#b0a4c9;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Nunito',sans-serif;
+    background:radial-gradient(circle at 20% 0%, var(--bg-top), var(--bg-bottom) 60%);
+    color:var(--ink);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:20px 14px 60px;
+    overflow-x:hidden;
+  }
+  h1{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:800;
+    font-size:clamp(28px,6vw,40px);
+    margin:6px 0 2px;
+    color:var(--violet-deep);
+    letter-spacing:0.5px;
+    text-align:center;
+  }
+  .subtitle{
+    font-size:15px;
+    color:#7a6a99;
+    margin-bottom:18px;
+    text-align:center;
+    font-weight:600;
+  }
+  .toolbar{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    justify-content:center;
+    margin-bottom:20px;
+  }
+  button{
+    font-family:'Nunito',sans-serif;
+    font-weight:800;
+    font-size:14px;
+    border:none;
+    border-radius:14px;
+    padding:11px 18px;
+    cursor:pointer;
+    transition:transform .12s ease, box-shadow .12s ease;
+    box-shadow:0 3px 0 rgba(0,0,0,0.08);
+  }
+  button:active{ transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,0.08); }
+  .btn-primary{ background:var(--violet); color:#fff; }
+  .btn-secondary{ background:#fff; color:var(--violet-deep); border:2px solid var(--line); }
+  .btn-ghost{ background:transparent; color:#a08fc4; box-shadow:none; font-weight:700; }
+
+  /* --- Setup view --- */
+  .setup-wrap{
+    width:100%;
+    max-width:520px;
+    background:var(--card);
+    border-radius:22px;
+    padding:22px;
+    box-shadow:0 10px 30px rgba(107,70,193,0.12);
+  }
+  .add-row{ display:flex; gap:8px; margin-bottom:12px; }
+  .add-row input[type="text"]{
+    flex:1;
+    font-family:'Nunito',sans-serif;
+    font-size:15px;
+    font-weight:600;
+    padding:12px 14px;
+    border-radius:12px;
+    border:2px solid var(--line);
+    outline:none;
+    color:var(--ink);
+    background:#fbf8ff;
+  }
+  .add-row input:focus{ border-color:var(--violet); }
+
+  .field-block{ margin-bottom:14px; }
+  .field-label{
+    display:block;
+    font-size:12px;
+    font-weight:800;
+    color:#8f7cb3;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    margin-bottom:6px;
+  }
+  .field-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .field-row input[type="date"]{
+    font-family:'Nunito',sans-serif;
+    font-size:14px;
+    font-weight:600;
+    padding:9px 10px;
+    border-radius:10px;
+    border:2px solid var(--line);
+    background:#fbf8ff;
+    color:var(--ink);
+  }
+  .chip-btn{
+    background:#fbf8ff;
+    color:#8f7cb3;
+    border:2px solid var(--line);
+    border-radius:10px;
+    padding:8px 12px;
+    font-size:13px;
+    box-shadow:none;
+  }
+  .chip-btn.active{ background:var(--violet); color:#fff; border-color:var(--violet); }
+  .toggle-group{ display:flex; gap:6px; }
+  .toggle-btn{
+    background:#fbf8ff;
+    color:#8f7cb3;
+    border:2px solid var(--line);
+    border-radius:10px;
+    padding:8px 16px;
+    font-size:13px;
+    box-shadow:none;
+  }
+  .toggle-btn.active{ background:var(--violet); color:#fff; border-color:var(--violet); }
+  .add-submit-row{ margin-bottom:16px; }
+  .add-submit-row button{ width:100%; }
+
+  .pool-list{ list-style:none; margin:0; padding:0; max-height:320px; overflow-y:auto; }
+  .pool-list li{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 4px;
+    border-bottom:1px solid var(--line);
+  }
+  .pool-list li:last-child{ border-bottom:none; }
+  .q-dot{
+    flex-shrink:0;
+    width:30px; height:30px;
+    border-radius:9px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:15px;
+  }
+  .pool-item-body{ flex:1; min-width:0; }
+  .pool-item-text{ font-weight:700; font-size:14.5px; }
+  .pool-item-meta{ font-size:12px; color:#a08fc4; font-weight:700; margin-top:1px; }
+  .remove-btn{
+    background:none; border:none; box-shadow:none;
+    color:#c9a8e0; font-size:18px; font-weight:800; cursor:pointer; padding:0 6px;
+    flex-shrink:0;
+  }
+  .pool-count{
+    text-align:center;
+    font-size:13px;
+    color:#a08fc4;
+    font-weight:700;
+    margin:14px 0 6px;
+  }
+  .empty-hint{
+    text-align:center;
+    color:#a08fc4;
+    font-weight:600;
+    padding:30px 10px;
+    font-size:14.5px;
+  }
+  .legend{
+    display:flex; flex-wrap:wrap; gap:8px 14px;
+    justify-content:center;
+    margin:2px 0 18px;
+    font-size:12px;
+    font-weight:700;
+    color:#8f7cb3;
+  }
+  .legend span{ display:inline-flex; align-items:center; gap:5px; }
+  .legend .dot{ width:10px; height:10px; border-radius:3px; display:inline-block; }
+
+  /* --- Board view --- */
+  .board-wrap{ width:100%; max-width:560px; }
+  .board{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    grid-template-rows:repeat(5,1fr);
+    gap:8px;
+    width:100%;
+    aspect-ratio:1/1;
+  }
+  .cell{
+    position:relative;
+    background:var(--card);
+    border-radius:12px;
+    border:2px solid var(--line);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:6px;
+    cursor:pointer;
+    user-select:none;
+    font-weight:700;
+    font-size:clamp(9.5px,2.3vw,12.5px);
+    line-height:1.2;
+    color:var(--ink);
+    transition:transform .1s ease, background .18s ease, border-color .18s ease, color .18s ease;
+    overflow:hidden;
+    box-shadow:0 0 0 2px var(--q-color, transparent) inset;
+  }
+  .cell:active{ transform:scale(0.94); }
+  .cell.checked{
+    background:var(--checked);
+    border-color:var(--violet-deep);
+    color:var(--checked-text);
+  }
+  .cell.won-line{
+    box-shadow:0 0 0 3px var(--gold) inset;
+  }
+  .q-badge{
+    position:absolute;
+    top:3px; right:4px;
+    font-size:12px;
+    z-index:2;
+    opacity:0.9;
+  }
+  .stamp{
+    position:absolute;
+    font-size:30px;
+    opacity:0;
+    transform:scale(0.3) rotate(-25deg);
+    pointer-events:none;
+  }
+  .cell.checked .stamp{
+    animation:stampDown .35s cubic-bezier(.2,1.4,.4,1) forwards;
+  }
+  @keyframes stampDown{
+    0%{ opacity:0; transform:scale(2) rotate(-25deg); }
+    60%{ opacity:1; transform:scale(0.85) rotate(-8deg); }
+    100%{ opacity:0.9; transform:scale(1) rotate(-10deg); }
+  }
+  .cell-text{ position:relative; z-index:1; }
+  .cell.checked .cell-text{ opacity:0.35; text-decoration:line-through; }
+
+  /* --- confetti + banner --- */
+  #confetti-layer{
+    position:fixed; inset:0; pointer-events:none; z-index:50; overflow:hidden;
+  }
+  .confetti-piece{
+    position:absolute; top:-10%; font-size:22px;
+    animation:fall linear forwards;
+  }
+  @keyframes fall{
+    to{ transform:translateY(115vh) rotate(360deg); opacity:0.9; }
+  }
+  #bingo-banner{
+    position:fixed; top:20%; left:50%; transform:translate(-50%,-30px) scale(0.7);
+    background:var(--violet);
+    color:#fff;
+    font-family:'Baloo 2',sans-serif;
+    font-weight:800;
+    font-size:clamp(26px,6vw,42px);
+    padding:16px 36px;
+    border-radius:20px;
+    box-shadow:0 14px 40px rgba(76,42,153,0.4);
+    z-index:60;
+    opacity:0;
+    text-align:center;
+  }
+  #bingo-banner.show{
+    animation:bannerIn .5s cubic-bezier(.2,1.4,.4,1) forwards, bannerOut .5s ease 2.1s forwards;
+  }
+  @keyframes bannerIn{
+    to{ opacity:1; transform:translate(-50%,0) scale(1); }
+  }
+  @keyframes bannerOut{
+    to{ opacity:0; transform:translate(-50%,-10px) scale(0.9); }
+  }
+  .footnote{
+    margin-top:16px;
+    font-size:12.5px;
+    color:#b3a4d1;
+    text-align:center;
+    max-width:400px;
+    font-weight:600;
+  }
+  .hidden{ display:none !important; }
+  .paste-overlay{
+    position:fixed; inset:0; background:rgba(45,27,78,0.55);
+    display:flex; align-items:center; justify-content:center;
+    z-index:100; padding:20px;
+  }
+  .paste-box{
+    background:var(--card); border-radius:20px; padding:22px;
+    max-width:440px; width:100%; box-shadow:0 12px 40px rgba(45,27,78,0.3);
+  }
+  .paste-box h3{ margin:0 0 8px; font-family:'Baloo 2',sans-serif; color:var(--violet-deep); }
+  .paste-hint{ font-size:13.5px; color:#6b5b8a; margin:0 0 12px; line-height:1.4; }
+  #paste-textarea{
+    width:100%; min-height:140px; border:2px solid var(--line); border-radius:12px;
+    padding:10px; font-family:monospace; font-size:12.5px; resize:vertical;
+    box-sizing:border-box; color:var(--ink);
+  }
+  .paste-error{
+    background:#fdecea; color:#c0392b; border-radius:10px; padding:8px 12px;
+    font-size:13px; margin-top:10px; font-weight:700;
+  }
+  .paste-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:14px; }
+  .paste-actions button{ padding:10px 18px; border-radius:12px; border:none; font-weight:700; font-family:'Nunito',sans-serif; cursor:pointer; }
+  .paste-actions .btn-primary{ background:var(--violet); color:#fff; }
+  .paste-actions .btn-ghost{ background:var(--line); color:var(--ink); }
+</style>
+</head>
+<body>
+
+<h1>🦄 Einhorn-Bingo</h1>
+<div class="subtitle">Deine To-Dos, ein Spiel</div>
+
+<div class="toolbar" id="toolbar"></div>
+<input type="file" id="restore-file" accept="application/json" class="hidden">
+
+<div id="paste-overlay" class="paste-overlay hidden">
+  <div class="paste-box">
+    <h3>📋 Sicherung einfügen</h3>
+    <p class="paste-hint">Öffne deine <strong>einhorn-bingo-sicherung.json</strong>, kopiere den kompletten Inhalt und füge ihn hier ein.</p>
+    <textarea id="paste-textarea" placeholder='{"pool": [...], "board": [...] }'></textarea>
+    <div id="paste-error" class="paste-error hidden"></div>
+    <div class="paste-actions">
+      <button type="button" class="btn-ghost" id="paste-cancel">Abbrechen</button>
+      <button type="button" class="btn-primary" id="paste-apply">Übernehmen</button>
+    </div>
+  </div>
+</div>
+
+<div id="setup-view" class="setup-wrap hidden">
+  <div class="field-block">
+    <span class="field-label">Rastergröße</span>
+    <div class="toggle-group" id="size-group">
+      <button type="button" class="toggle-btn" data-size="3">3×3</button>
+      <button type="button" class="toggle-btn" data-size="4">4×4</button>
+      <button type="button" class="toggle-btn active" data-size="5">5×5</button>
+    </div>
+  </div>
+
+  <div class="field-block">
+    <span class="field-label">Fokus</span>
+    <div class="field-row">
+      <button type="button" class="chip-btn" id="urgent-toggle">🔥 Nur dringende (heute &amp; morgen)</button>
+    </div>
+  </div>
+
+  <div class="add-row">
+    <input id="todo-input" type="text" placeholder="Neue Aufgabe eintippen …" maxlength="60">
+  </div>
+
+  <div class="field-block">
+    <span class="field-label">Deadline</span>
+    <div class="field-row">
+      <input type="date" id="deadline-input">
+      <button type="button" class="chip-btn active" id="no-deadline-btn">keine Deadline</button>
+    </div>
+  </div>
+
+  <div class="field-block">
+    <span class="field-label">Merkt jemand / etwas Konkretes, wenn's nicht passiert?</span>
+    <div class="toggle-group">
+      <button type="button" class="toggle-btn" id="important-yes">Ja, wichtig</button>
+      <button type="button" class="toggle-btn active" id="important-no">Nein</button>
+    </div>
+  </div>
+
+  <div class="add-submit-row">
+    <button class="btn-primary" id="add-btn">+ Aufgabe hinzufügen</button>
+  </div>
+
+  <div class="legend">
+    <span><i class="dot" style="background:#e0483a"></i>🔨 Sofort</span>
+    <span><i class="dot" style="background:#6b46c1"></i>📌 Einplanen</span>
+    <span><i class="dot" style="background:#e2a615"></i>⚡ Kurz erledigen</span>
+    <span><i class="dot" style="background:#b0a4c9"></i>🌙 Später</span>
+  </div>
+
+  <ul class="pool-list" id="pool-list"></ul>
+  <div id="empty-hint" class="empty-hint hidden">Noch keine Aufgaben. Trag oben deine erste ein! ✨</div>
+  <div class="pool-count" id="pool-count"></div>
+</div>
+
+<div id="board-view" class="board-wrap hidden">
+  <div class="board" id="board"></div>
+  <div class="footnote">Tippe eine Aufgabe an, wenn sie erledigt ist. Volle Reihe, Spalte oder Diagonale = Bingo! 🦄</div>
+</div>
+
+<div id="confetti-layer"></div>
+<div id="bingo-banner">🦄 BINGO! ✨</div>
+
+<script>
+const POOL_KEY = 'pool-key-unicorn-bingo-pool';
+const BOARD_KEY = 'board-key-unicorn-bingo-board';
+const SIZE_KEY = 'size-key-unicorn-bingo-size';
+const URGENT_KEY = 'urgent-key-unicorn-bingo-urgent';
+const STAMPS = ['🦄','✨','🌈','⭐'];
+
+let pool = [];       // [{id, text, deadline: 'YYYY-MM-DD'|null, important: bool}]
+let board = null;    // array of {id, text, deadline, important, checked}
+let gridSize = 5;
+let urgentOnly = false;
+let celebratedLines = new Set();
+let pendingDeadline = null;
+let pendingImportant = false;
+
+const toolbar = document.getElementById('toolbar');
+const setupView = document.getElementById('setup-view');
+const boardView = document.getElementById('board-view');
+const poolListEl = document.getElementById('pool-list');
+const poolCountEl = document.getElementById('pool-count');
+const emptyHint = document.getElementById('empty-hint');
+const boardEl = document.getElementById('board');
+const todoInput = document.getElementById('todo-input');
+const deadlineInput = document.getElementById('deadline-input');
+const noDeadlineBtn = document.getElementById('no-deadline-btn');
+const importantYesBtn = document.getElementById('important-yes');
+const importantNoBtn = document.getElementById('important-no');
+const sizeGroup = document.getElementById('size-group');
+const urgentToggle = document.getElementById('urgent-toggle');
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+function normalizePoolItem(item){
+  if (typeof item === 'string') return { id: uid(), text: item, deadline: null, important: false };
+  return { id: item.id || uid(), text: item.text, deadline: item.deadline || null, important: !!item.important };
+}
+
+async function loadData(){
+  try{
+    const raw = localStorage.getItem(POOL_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    pool = parsed.map(normalizePoolItem);
+  }catch(e){ pool = []; }
+  try{
+    const raw = localStorage.getItem(BOARD_KEY);
+    board = raw ? JSON.parse(raw) : null;
+  }catch(e){ board = null; }
+  try{
+    const raw = localStorage.getItem(SIZE_KEY);
+    gridSize = raw ? parseInt(raw, 10) : 5;
+  }catch(e){ gridSize = 5; }
+  try{
+    urgentOnly = localStorage.getItem(URGENT_KEY) === '1';
+  }catch(e){ urgentOnly = false; }
+  if (board){
+    const n = Math.round(Math.sqrt(board.length));
+    if (n >= 3 && n <= 5) gridSize = n;
+  }
+  setSizeButtons(gridSize);
+  urgentToggle.classList.toggle('active', urgentOnly);
+  render();
+}
+
+async function saveSize(){
+  try{ localStorage.setItem(SIZE_KEY, String(gridSize)); }
+  catch(e){ console.error('Speichern fehlgeschlagen', e); }
+}
+
+function setSizeButtons(n){
+  [...sizeGroup.querySelectorAll('.toggle-btn')].forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.size,10) === n);
+  });
+}
+
+sizeGroup.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.toggle-btn');
+  if (!btn) return;
+  gridSize = parseInt(btn.dataset.size, 10);
+  setSizeButtons(gridSize);
+  await saveSize();
+});
+
+urgentToggle.addEventListener('click', async () => {
+  urgentOnly = !urgentOnly;
+  urgentToggle.classList.toggle('active', urgentOnly);
+  try{ localStorage.setItem(URGENT_KEY, urgentOnly ? '1' : '0'); }
+  catch(e){ console.error('Speichern fehlgeschlagen', e); }
+});
+
+async function savePool(){
+  try{ localStorage.setItem(POOL_KEY, JSON.stringify(pool)); }
+  catch(e){ console.error('Speichern fehlgeschlagen', e); }
+}
+async function saveBoard(){
+  try{ localStorage.setItem(BOARD_KEY, JSON.stringify(board)); }
+  catch(e){ console.error('Speichern fehlgeschlagen', e); }
+}
+
+function downloadBackup(){
+  const data = { pool, board, exportedAt: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'einhorn-bingo-sicherung.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function restoreBackup(file){
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try{
+      applyBackupData(reader.result);
+      alert('Sicherung wiederhergestellt! 🦄');
+    }catch(e){
+      alert('Diese Datei konnte nicht gelesen werden: ' + e.message);
+    }
+  };
+  reader.onerror = () => {
+    alert('Datei konnte nicht gelesen werden. Bitte versuche stattdessen "Per Text einfügen".');
+  };
+  reader.readAsText(file);
+}
+
+async function applyBackupData(jsonText){
+  const data = JSON.parse(jsonText);
+  if (!data || (!Array.isArray(data.pool) && !Array.isArray(data.board))){
+    throw new Error('Diese Datei enthält kein gültiges Bingo-Format.');
+  }
+  pool = (data.pool || []).map(normalizePoolItem);
+  board = data.board || null;
+  celebratedLines = new Set();
+  await savePool();
+  await saveBoard();
+  render();
+}
+
+function openPasteImport(){
+  document.getElementById('paste-textarea').value = '';
+  document.getElementById('paste-error').classList.add('hidden');
+  document.getElementById('paste-overlay').classList.remove('hidden');
+}
+
+function closePasteImport(){
+  document.getElementById('paste-overlay').classList.add('hidden');
+}
+
+document.getElementById('paste-cancel').addEventListener('click', closePasteImport);
+
+document.getElementById('paste-apply').addEventListener('click', async () => {
+  const raw = document.getElementById('paste-textarea').value.trim();
+  const errorEl = document.getElementById('paste-error');
+  errorEl.classList.add('hidden');
+  if (!raw){
+    errorEl.textContent = 'Bitte zuerst den Inhalt der Sicherungsdatei einfügen.';
+    errorEl.classList.remove('hidden');
+    return;
+  }
+  try{
+    await applyBackupData(raw);
+    closePasteImport();
+    alert('Sicherung wiederhergestellt! 🦄');
+  }catch(e){
+    errorEl.textContent = 'Konnte nicht gelesen werden: ' + e.message;
+    errorEl.classList.remove('hidden');
+  }
+});
+
+/* ---------- Quadrant / urgency logic ---------- */
+
+function daysUntil(deadline){
+  if (!deadline) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const due = new Date(deadline + 'T00:00:00');
+  return Math.round((due - today) / 86400000);
+}
+
+function isUrgent(deadline){
+  const d = daysUntil(deadline);
+  if (d === null) return false;
+  return d <= 7;
+}
+
+function quadrantOf(item){
+  const urgent = isUrgent(item.deadline);
+  const important = !!item.important;
+  if (urgent && important)  return { key:'now',   label:'Sofort',          emoji:'🔨', color:'var(--q-now)' };
+  if (!urgent && important) return { key:'plan',  label:'Einplanen',       emoji:'📌', color:'var(--q-plan)' };
+  if (urgent && !important) return { key:'quick', label:'Kurz erledigen',  emoji:'⚡', color:'var(--q-quick)' };
+  return                          { key:'later', label:'Später',          emoji:'🌙', color:'var(--q-later)' };
+}
+
+function formatDeadline(deadline){
+  const d = daysUntil(deadline);
+  if (d === null) return 'keine Deadline';
+  if (d < 0) return `überfällig seit ${Math.abs(d)} Tag${Math.abs(d)===1?'':'en'}`;
+  if (d === 0) return 'heute fällig';
+  if (d === 1) return 'morgen fällig';
+  return `in ${d} Tagen fällig`;
+}
+
+/* ---------- Toolbar / view switching ---------- */
+
+function renderToolbar(){
+  toolbar.innerHTML = '';
+  if (board){
+    const newRoundBtn = mkBtn('🎲 Neue Runde', 'btn-primary', generateBoard);
+    const editBtn = mkBtn('✏️ Liste bearbeiten', 'btn-ghost', () => showSetup(true));
+    toolbar.appendChild(newRoundBtn);
+    toolbar.appendChild(editBtn);
+  } else {
+    const genBtn = mkBtn('🎲 Bingo erstellen', 'btn-primary', generateBoard);
+    toolbar.appendChild(genBtn);
+  }
+  const backupBtn = mkBtn('📤 Sichern', 'btn-ghost', downloadBackup);
+  const restoreBtn = mkBtn('📥 Wiederherstellen', 'btn-ghost', () => document.getElementById('restore-file').click());
+  const pasteBtn = mkBtn('📋 Per Text einfügen', 'btn-ghost', openPasteImport);
+  toolbar.appendChild(backupBtn);
+  toolbar.appendChild(restoreBtn);
+  toolbar.appendChild(pasteBtn);
+}
+
+function mkBtn(label, cls, onClick){
+  const b = document.createElement('button');
+  b.textContent = label;
+  b.className = cls;
+  b.onclick = onClick;
+  return b;
+}
+
+function showSetup(showIt){
+  if (showIt){
+    setupView.classList.remove('hidden');
+    boardView.classList.add('hidden');
+  } else {
+    setupView.classList.add('hidden');
+    boardView.classList.remove('hidden');
+  }
+  renderToolbar();
+}
+
+function render(){
+  renderToolbar();
+  renderPool();
+  if (board){
+    boardView.classList.remove('hidden');
+    setupView.classList.add('hidden');
+    renderBoard();
+  } else {
+    setupView.classList.remove('hidden');
+    boardView.classList.add('hidden');
+  }
+}
+
+/* ---------- Pool (setup) ---------- */
+
+function renderPool(){
+  poolListEl.innerHTML = '';
+  emptyHint.classList.toggle('hidden', pool.length !== 0);
+
+  pool.forEach((item, i) => {
+    const q = quadrantOf(item);
+    const li = document.createElement('li');
+
+    const dot = document.createElement('div');
+    dot.className = 'q-dot';
+    dot.style.background = q.color;
+    dot.textContent = q.emoji;
+
+    const body = document.createElement('div');
+    body.className = 'pool-item-body';
+    const txt = document.createElement('div');
+    txt.className = 'pool-item-text';
+    txt.textContent = item.text;
+    const meta = document.createElement('div');
+    meta.className = 'pool-item-meta';
+    meta.textContent = `${q.label} · ${formatDeadline(item.deadline)}`;
+    body.appendChild(txt);
+    body.appendChild(meta);
+
+    const rm = document.createElement('button');
+    rm.className = 'remove-btn';
+    rm.textContent = '✕';
+    rm.onclick = () => removeTodo(i);
+
+    li.appendChild(dot);
+    li.appendChild(body);
+    li.appendChild(rm);
+    poolListEl.appendChild(li);
+  });
+
+  const total = gridSize * gridSize;
+  const remaining = total - pool.length;
+  if (pool.length === 0){
+    poolCountEl.textContent = '';
+  } else if (remaining > 0){
+    poolCountEl.textContent = `${pool.length} Aufgaben — noch ${remaining} bis zum vollen ${gridSize}×${gridSize}-Raster (kleinere Listen werden aufgefüllt)`;
+  } else {
+    poolCountEl.textContent = `${pool.length} Aufgaben — bereit fürs Bingo! 🎉`;
+  }
+}
+
+noDeadlineBtn.onclick = () => {
+  deadlineInput.value = '';
+  pendingDeadline = null;
+  noDeadlineBtn.classList.add('active');
+};
+deadlineInput.addEventListener('input', () => {
+  pendingDeadline = deadlineInput.value || null;
+  noDeadlineBtn.classList.toggle('active', !pendingDeadline);
+});
+importantYesBtn.onclick = () => {
+  pendingImportant = true;
+  importantYesBtn.classList.add('active');
+  importantNoBtn.classList.remove('active');
+};
+importantNoBtn.onclick = () => {
+  pendingImportant = false;
+  importantNoBtn.classList.add('active');
+  importantYesBtn.classList.remove('active');
+};
+
+async function addTodo(){
+  const val = todoInput.value.trim();
+  if (!val) return;
+  pool.push({ id: uid(), text: val, deadline: pendingDeadline, important: pendingImportant });
+  todoInput.value = '';
+  deadlineInput.value = '';
+  pendingDeadline = null;
+  pendingImportant = false;
+  noDeadlineBtn.classList.add('active');
+  importantNoBtn.classList.add('active');
+  importantYesBtn.classList.remove('active');
+  await savePool();
+  renderPool();
+  renderToolbar();
+  todoInput.focus();
+}
+
+async function removeTodo(i){
+  pool.splice(i,1);
+  await savePool();
+  renderPool();
+  renderToolbar();
+}
+
+document.getElementById('add-btn').onclick = addTodo;
+todoInput.addEventListener('keydown', e => { if (e.key === 'Enter') addTodo(); });
+document.getElementById('restore-file').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) restoreBackup(file);
+  e.target.value = '';
+});
+
+/* ---------- Board generation & play ---------- */
+
+function shuffle(arr){
+  const a = arr.slice();
+  for (let i = a.length -1; i>0; i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+async function generateBoard(){
+  let sourcePool = pool;
+  if (urgentOnly){
+    sourcePool = pool.filter(p => {
+      const d = daysUntil(p.deadline);
+      return d !== null && d <= 1;
+    });
+    if (sourcePool.length === 0){
+      alert('Keine Aufgaben mit Deadline heute oder morgen gefunden. Filter kurz ausschalten oder Deadlines eintragen.');
+      showSetup(true);
+      return;
+    }
+  }
+  if (sourcePool.length === 0){
+    showSetup(true);
+    todoInput.focus();
+    return;
+  }
+  const total = gridSize * gridSize;
+  let items;
+  if (sourcePool.length >= total){
+    items = shuffle(sourcePool).slice(0, total);
+  } else {
+    items = [];
+    let source = shuffle(sourcePool);
+    while (items.length < total){
+      items = items.concat(source);
+      source = shuffle(sourcePool);
+    }
+    items = items.slice(0, total);
+  }
+  board = items.map(it => ({ id: it.id, text: it.text, deadline: it.deadline, important: it.important, checked:false }));
+  celebratedLines = new Set();
+  await saveBoard();
+  await saveSize();
+  showSetup(false);
+  renderBoard();
+}
+
+function renderBoard(){
+  boardEl.innerHTML = '';
+  if (!board) return;
+  const n = Math.round(Math.sqrt(board.length));
+  boardEl.style.gridTemplateColumns = `repeat(${n},1fr)`;
+  boardEl.style.gridTemplateRows = `repeat(${n},1fr)`;
+  const wonCells = getWonCellIndices();
+  board.forEach((cell, i) => {
+    const q = quadrantOf(cell);
+    const div = document.createElement('div');
+    div.className = 'cell' + (cell.checked ? ' checked' : '') + (wonCells.has(i) ? ' won-line' : '');
+    div.style.setProperty('--q-color', q.color);
+
+    const badge = document.createElement('span');
+    badge.className = 'q-badge';
+    badge.textContent = q.emoji;
+
+    const txt = document.createElement('span');
+    txt.className = 'cell-text';
+    txt.textContent = cell.text;
+
+    const stamp = document.createElement('span');
+    stamp.className = 'stamp';
+    stamp.textContent = STAMPS[i % STAMPS.length];
+
+    div.appendChild(badge);
+    div.appendChild(txt);
+    div.appendChild(stamp);
+    div.onclick = () => toggleCell(i);
+    boardEl.appendChild(div);
+  });
+}
+
+function computeLines(n){
+  const lines = [];
+  for (let r=0;r<n;r++) lines.push(Array.from({length:n}, (_,c) => r*n+c));
+  for (let c=0;c<n;c++) lines.push(Array.from({length:n}, (_,r) => r*n+c));
+  lines.push(Array.from({length:n}, (_,k) => k*n+k));
+  lines.push(Array.from({length:n}, (_,k) => k*n+(n-1-k)));
+  return lines;
+}
+
+function getWonCellIndices(){
+  const set = new Set();
+  if (!board) return set;
+  const n = Math.round(Math.sqrt(board.length));
+  const lines = computeLines(n);
+  lines.forEach((line) => {
+    if (line.every(i => board[i].checked)){
+      line.forEach(i => set.add(i));
+    }
+  });
+  return set;
+}
+
+async function toggleCell(i){
+  const cell = board[i];
+  const newChecked = !cell.checked;
+
+  if (cell.id){
+    // Gleiche Aufgabe kann mehrfach im Raster stecken (bei kleinen Listen) -> alle zusammen abhaken
+    board.forEach(c => { if (c.id === cell.id) c.checked = newChecked; });
+  } else {
+    cell.checked = newChecked;
+  }
+
+  if (newChecked){
+    const idx = pool.findIndex(p => p.id === cell.id);
+    if (idx !== -1) pool.splice(idx, 1);
+  } else {
+    if (cell.id && !pool.some(p => p.id === cell.id)){
+      pool.push({ id: cell.id, text: cell.text, deadline: cell.deadline, important: cell.important });
+    }
+  }
+
+  await saveBoard();
+  await savePool();
+  renderBoard();
+  renderPool();
+  checkForNewWins();
+}
+
+function checkForNewWins(){
+  const n = Math.round(Math.sqrt(board.length));
+  const lines = computeLines(n);
+  let newWin = false;
+  lines.forEach((line, idx) => {
+    const complete = line.every(i => board[i].checked);
+    if (complete && !celebratedLines.has(idx)){
+      celebratedLines.add(idx);
+      newWin = true;
+    }
+    if (!complete && celebratedLines.has(idx)){
+      celebratedLines.delete(idx);
+    }
+  });
+  if (newWin) celebrate();
+}
+
+function celebrate(){
+  const banner = document.getElementById('bingo-banner');
+  banner.classList.remove('show');
+  void banner.offsetWidth;
+  banner.classList.add('show');
+
+  const layer = document.getElementById('confetti-layer');
+  const emojis = ['🦄','✨','🌟','🎉','💜'];
+  for (let i=0;i<36;i++){
+    const piece = document.createElement('span');
+    piece.className = 'confetti-piece';
+    piece.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    piece.style.left = Math.random()*100 + 'vw';
+    piece.style.animationDuration = (2.2 + Math.random()*1.6) + 's';
+    piece.style.fontSize = (16 + Math.random()*16) + 'px';
+    layer.appendChild(piece);
+    setTimeout(() => piece.remove(), 4000);
+  }
+}
+
+loadData();
+</script>
+</body>
+</html>
